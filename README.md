@@ -21,12 +21,6 @@
 
 ---
 
-## Architecture
-
-![CI/CD Pipeline Architecture](docs/images/image.png)
-
----
-
 ## Prerequisites
 
 - Ubuntu/Debian-based Linux (WSL2 for Windows)
@@ -449,7 +443,7 @@ Access the application at: `http://localhost:8082`
 
 ### Pipeline Stages
 
-![Jenkins Pipeline](docs/images/jenkins.png)
+
 
 1. **Checkout** - Pull latest code from GitHub
 2. **Compile** - Compile Java source code
