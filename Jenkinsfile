@@ -1,10 +1,6 @@
 pipeline {
     agent any
     
-    tools {
-        maven 'mymaven'
-    }
-    
     environment {
         DOCKER_IMAGE = "ayooz/my-country-service:${env.BUILD_NUMBER}"
     }
@@ -15,12 +11,12 @@ pipeline {
                 git branch: 'main', 
                 url: 'https://github.com/ay000z/Microservices-project-with-Country-service-for-CI-CD-pipeline'
                 
-                // Vérification des fichiers
                 sh '''
                     echo "📁 Structure du projet:"
                     ls -la
-                    echo "🐋 Dockerfile:"
-                    cat Dockerfile
+                    echo "🐋 Vérification Maven Wrapper:"
+                    ls -la mvnw || echo "mvnw non trouvé"
+                    ls -la .mvn/ || echo ".mvn/ non trouvé"
                 '''
             }
         }
@@ -28,11 +24,10 @@ pipeline {
         stage('Build Maven') {
             steps {
                 sh '''
-                    echo "🔨 Démarrage de Maven..."
-                    which mvn
-                    mvn --version
-                    echo "🔧 Construction du projet..."
-                    mvn clean install -X
+                    echo "🔨 Construction avec Maven Wrapper..."
+                    chmod +x mvnw  # Donner les permissions d'exécution
+                    ./mvnw clean install
+                    echo "✅ Build Maven terminé"
                 '''
             }
         }
@@ -43,7 +38,7 @@ pipeline {
                     echo "📦 Vérification du build..."
                     ls -la target/
                     find target -name "*.jar" | head -5
-                    echo "✅ Build vérifié"
+                    echo "✅ Fichier JAR généré"
                 '''
             }
         }
@@ -88,6 +83,7 @@ pipeline {
                             kubectl apply -f deployment.yaml
                             kubectl apply -f service.yaml
                             kubectl get pods -n jenkins
+                            echo "✅ Déploiement réussi!"
                         '''
                     }
                 }
@@ -101,6 +97,10 @@ pipeline {
         }
         success {
             echo 'Pipeline succeeded! 🎉'
+            sh """
+                echo "🌐 Application disponible sur: http://localhost:30007"
+                echo "📦 Image Docker: ${env.DOCKER_IMAGE}"
+            """
         }
         failure {
             echo 'Pipeline failed! ❌'
