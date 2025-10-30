@@ -6,7 +6,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = "jamina2385/my-country-service:${env.BUILD_NUMBER}"
+        DOCKER_IMAGE = "ayooz/my-country-service:${env.BUILD_NUMBER}"
     }
     
     stages {
