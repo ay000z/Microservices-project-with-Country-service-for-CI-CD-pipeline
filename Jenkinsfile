@@ -1,17 +1,19 @@
 pipeline {
     agent any
+    
     tools {
-        maven 'mymaven'  // Assurez-vous que ce tool est configuré dans Jenkins
+        maven 'mymaven'
     }
+    
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-pwd')
-        REGISTRY = "jamina2385"
+        DOCKER_IMAGE = "jamina2385/my-country-service:${env.BUILD_NUMBER}"
     }
+    
     stages {
-        stage('Checkout code') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'master', 
-                url: 'https://github.com/Jamina-ENSI/Country-service'
+                git branch: 'main', 
+                url: 'https://github.com/ay000z/Microservices-project-with-Country-service-for-CI-CD-pipeline'
             }
         }
         
@@ -19,20 +21,12 @@ pipeline {
             steps {
                 sh 'mvn clean install'
             }
-            post {
-                success {
-                    echo 'Maven build successful!'
-                }
-                failure {
-                    echo 'Maven build failed!'
-                }
-            }
         }
         
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("my-country-service:${env.BUILD_NUMBER}")
+                    docker.build("${env.DOCKER_IMAGE}")
                 }
             }
         }
@@ -41,8 +35,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', 'dockerhub-pwd') {
-                        docker.image("my-country-service:${env.BUILD_NUMBER}").push()
-                        docker.image("my-country-service:${env.BUILD_NUMBER}").push("latest")
+                        docker.image("${env.DOCKER_IMAGE}").push()
                     }
                 }
             }
@@ -51,13 +44,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'kubeconfig-file', serverUrl: '']) {
+                    kubeconfig(credentialsId: 'kubeconfig-file', serverUrl: '') {
                         sh 'kubectl apply -f deployment.yaml'
                         sh 'kubectl apply -f service.yaml'
-                        
-                        // Vérification du déploiement
                         sh 'kubectl get pods -n jenkins'
-                        sh 'kubectl get services -n jenkins'
                     }
                 }
             }
@@ -67,14 +57,12 @@ pipeline {
     post {
         always {
             echo 'Pipeline execution completed'
-            cleanWs()  // Nettoyer l'espace de travail
         }
         success {
-            echo 'Pipeline succeeded!'
-            slackSend channel: '#deployments', message: "Deployment successful: ${env.BUILD_URL}"
+            echo 'Pipeline succeeded! 🎉'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed! ❌'
         }
     }
 }
