@@ -1,22 +1,32 @@
 pipeline {
     agent any
-    
+    tools {
+        maven 'mymaven'
+    }
     stages {
-        stage('Verify Project Structure') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', 
-                url: 'https://github.com/ay000z/Microservices-project-with-Country-service-for-CI-CD-pipeline'
-                
+                git branch: 'main', url: 'https://github.com/ay000z/Microservices-project-with-Country-service-for-CI-CD-pipeline.git'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
                 script {
-                    // Vérification basique sans commandes shell complexes
-                    echo "Vérification de la structure du projet..."
+                    sh 'docker build -t mon-app:${BUILD_NUMBER} .'
                 }
             }
         }
         
-        stage('List Files') {
+        stage('Deploy') {
             steps {
-                sh 'ls -la'
+                sh 'docker run -d -p 8080:8080 mon-app:${BUILD_NUMBER}'
             }
         }
     }
