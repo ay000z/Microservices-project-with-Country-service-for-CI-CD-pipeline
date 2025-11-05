@@ -1,8 +1,5 @@
-FROM openjdk:21-oracle
-WORKDIR /app
-
-# copy the executable Spring Boot WAR
-COPY target/*.war app.war
-
-EXPOSE 8087
-ENTRYPOINT ["java","-jar","/app/app.war"]
+FROM openjdk:17-jdk-slim
+VOLUME /tmp
+COPY target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+EXPOSE 8080
